@@ -1,0 +1,4 @@
+#include "system_events.h"
+
+ESP_EVENT_DEFINE_BASE(APP_EVENTS);
+ESP_EVENT_DEFINE_BASE(CORE_EVENTS);
