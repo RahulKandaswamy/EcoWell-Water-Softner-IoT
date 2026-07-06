@@ -18,11 +18,11 @@
 #define MODULE "APP"
 
 const mqtt_config_t mqttConfig = {
-  .broker = "www.xpredictautomation.com", // domain name or IP address of the MQTT broker
+  .broker = "13.233.38.147", // domain name or IP address of the MQTT broker
   .port = 1883, // non-secure port for MQTT
-  .username = "XP_DEMO_MASTER", // username for MQTT authentication, mandatory
-  .password = "xplbs@123", // password for MQTT authentication, mandatory
-  .clientId = "XP-01", // unique client ID for this device, mandatory
+  .username = "ecowell_controller", // username for MQTT authentication, mandatory
+  .password = "pass@123", // password for MQTT authentication, mandatory
+  .clientId = "cntr-01", // unique client ID for this device, mandatory
   .secure = false, // changes, not required
   .cleanSession = false, // changes, not required
   .autoReconnect = true, // changes, not required

@@ -5,6 +5,7 @@
 #define RS485_RX_PIN  18
 #define RS485_TX_PIN  17
 #define RS485_DE_PIN  -1   // Set to actual GPIO if your RS485 board has DE/RE pin
+#define RELAY_PIN     1    // GPIO pin connected to the physical relay
 
 #define SLAVE_ID      1
 #define BAUD_RATE     19200
@@ -158,11 +159,13 @@ ModbusMessage FC05(ModbusMessage request){
     Serial.println("  >>> REGEN START command received! <<<");
     Serial.println("========================================");
     sim_regen_status = true;
+    digitalWrite(RELAY_PIN, HIGH); // Turn on the physical relay
   } else {
     Serial.println("========================================");
     Serial.println("  >>> REGEN STOP command received!  <<<");
     Serial.println("========================================");
     sim_regen_status = false;
+    digitalWrite(RELAY_PIN, LOW);  // Turn off the physical relay
   }
 
   refreshRegisters();
@@ -208,11 +211,13 @@ void processSerialCommand(){
   }
   else if(cmd == "regen on"){
     sim_regen_status = true;
-    Serial.println("[SIM] Regen Status = RUNNING");
+    digitalWrite(RELAY_PIN, HIGH); // Turn on the physical relay
+    Serial.println("[SIM] Regen Status = RUNNING (Relay ON)");
   }
   else if(cmd == "regen off"){
     sim_regen_status = false;
-    Serial.println("[SIM] Regen Status = STOPPED");
+    digitalWrite(RELAY_PIN, LOW);  // Turn off the physical relay
+    Serial.println("[SIM] Regen Status = STOPPED (Relay OFF)");
   }
   else if(cmd == "fault"){
     sim_water_pressure = 10.0f;
@@ -267,6 +272,10 @@ void setup(){
 
   // Start RS485 Serial
   Serial2.begin(BAUD_RATE, SERIAL_8N2, RS485_RX_PIN, RS485_TX_PIN);
+
+  // Configure Relay GPIO pin
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW); // Keep relay off initially
 
   // Register Modbus workers BEFORE begin()
   MBserver.registerWorker(SLAVE_ID, READ_HOLD_REGISTER, &FC03);
