@@ -53,6 +53,14 @@ static const publisher_config_t publisherConfig = {
   .publishIntervalMs = 20000,
 };
 
+/**
+ * @brief Handles critical system-level initialization and execution errors.
+ * 
+ * If a critical memory allocation or configuration failure occurs, this handler
+ * logs the fault, posts a system fault event, and restarts the ESP32 if recovery is impossible.
+ * 
+ * @param status The system error code indicating the failure.
+ */
 static void fault_handler(sys_status_t status){
   LOG_ERROR(MODULE, "SYSTEM FAULT ENCOUNTERED");
 
@@ -86,6 +94,30 @@ static void fault_handler(sys_status_t status){
       break;
   }      
 }
+
+/**
+ * @file main.cpp
+ * @brief Application Entry Point & Lifecycle Mediator.
+ * 
+ * Configures system-wide parameters, initializes all software modules in 
+ * strict dependency order, and orchestrates the service lifecycle using 
+ * event-driven callbacks triggered by network and MQTT state changes.
+ */
+/**
+ * @brief Main event handler coordinating the network and MQTT client state changes.
+ * 
+ * Decoupled event callbacks that manage the lifecycle of other services:
+ * - APP_EVENT_NETWORK_UP: Starts the MQTT service once IP is acquired.
+ * - APP_EVENT_NETWORK_DOWN: Stops the MQTT client when Wi-Fi connection drops.
+ * - APP_EVENT_MQTT_CONNECTED: Starts publisher/subscriber tasks.
+ * - APP_EVENT_MQTT_DISCONNECTED: Stops publisher/subscriber tasks.
+ * 
+ * @param eventHandlerArg User argument passed to the handler (unused).
+ * @param eventBase The event loop base (e.g. APP_EVENTS).
+ * @param eventId The specific event ID triggered.
+ * @param eventData Pointer to optional event-specific payload data.
+ */
+ 
 
 static void app_event_handler(void *arg, esp_event_base_t base, int32_t id, void *data){
   switch(id){

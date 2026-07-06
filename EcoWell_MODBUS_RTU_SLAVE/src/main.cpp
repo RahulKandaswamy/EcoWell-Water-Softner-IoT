@@ -27,6 +27,26 @@ static bool discreteInputs[2] = {false, false};
 // ============= eModbus Server ====================
 ModbusServerRTU MBserver(2000, RS485_DE_PIN);
 
+/**
+ * @file main.cpp (RTU Slave Simulator)
+ * @brief Modbus Slave simulator with an interactive Serial CLI.
+ * 
+ * Implements standard Modbus function code callbacks (FC02, FC03, FC05) 
+ * over RS-485 and provides a Serial Command Terminal allowing manual simulation 
+ * of sensor values, power statuses, and system faults.
+ */
+/**
+ * @brief Encodes 32-bit floats into two 16-bit registers using CDAB order.
+ * 
+ * Gateway expects CDAB (Word-swapped Big Endian):
+ * - Register N receives the low 16-bits (CD).
+ * - Register N+1 receives the high 16-bits (AB).
+ * Uses memcpy type-punning to safely translate raw float bytes.
+ * 
+ * @param regIndex Target index in the holding registers array.
+ * @param value The float telemetry value to encode.
+ */
+
 // ============= FLOAT ENCODING (CDAB Word Order) ==
 // Gateway expects CDAB: Low word first, High word second
 static void encodeFloat_CDAB(uint16_t regIndex, float value){
@@ -105,6 +125,17 @@ ModbusMessage FC02(ModbusMessage request){
   Serial.printf("[FC02] Read %u discrete inputs from addr %u → 0x%02X\n", bits, addr, bitData);
   return response;
 }
+
+/**
+ * @brief Callback handler for Modbus FC05 (Write Single Coil) requests.
+ * 
+ * Listens on protocol address 0 (cmd_regen). Writing 0xFF00 triggers 
+ * active regeneration status (sim_regen_status = true), which is reflected
+ * in discrete inputs. Writing 0x0000 clears/aborts active regeneration.
+ * 
+ * @param request The incoming Modbus write coil frame.
+ * @return ModbusMessage The response frame (echo of the write or error packet).
+ */
 
 // ============= FC05: Write Single Coil ===========
 ModbusMessage FC05(ModbusMessage request){

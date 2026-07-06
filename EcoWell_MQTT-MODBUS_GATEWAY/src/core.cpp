@@ -8,28 +8,44 @@
 
 #define MODULE "CORE"
 
-// ===================== STATE =====================
+// STATE 
 static ws_state_t    gState       = WS_STATE_IDLE;
 static portMUX_TYPE  gStateMux    = portMUX_INITIALIZER_UNLOCKED;
 static TaskHandle_t  gTaskHandle  = NULL;
 static bool          gInitialized = false;
 
-// ===================== COMMANDS ==================
+//COMMANDS
 static SemaphoreHandle_t gCommandMutex   = NULL;
 static bool              gRegenPending   = false;
 static bool              gAbortPending   = false;
 
-// ===================== REGEN TIMER ===============
+// REGEN TIMER 
 static uint32_t gRegenStartTime = 0;
 static bool     gRegenStopping  = false;
 
-// ===================== THRESHOLDS ================
+//THRESHOLDS 
 static const float    MIN_WATER_PRESSURE  = 20.0f;   // psi
 static const float    MIN_SALT_LEVEL      = 10.0f;   // %
 static const uint32_t MAX_REGEN_TIME_MS   = 120UL * 1000UL; // 2 min
 static const uint32_t CORE_EVAL_PERIOD_MS = 2000;    // 2 seconds
 
-// ============= THREAD-SAFE STATE =================
+/**
+ * @file core.cpp
+ * @brief Water Softener State Machine and Command Processor.
+ * 
+ * Evaluates the water softener's operational states (IDLE, MONITORING, 
+ * REGEN_RUNNING, FAULT) on a periodic 2-second loop. Implements safety 
+ * interlocks for starting/stopping regeneration, monitors simulated sensor 
+ * thresholds (pressure and salt), and fires system status events.
+ */
+/**
+ * @brief Thread-safe getter for the current state of the water softener.
+ * @return The current state (ws_state_t).
+ * @note Uses portENTER_CRITICAL / portEXIT_CRITICAL spinlocks to prevent race 
+ *       conditions with tasks reading state.
+ */
+
+//THREAD-SAFE STATE
 ws_state_t core_get_state(void){
   ws_state_t copy;
   portENTER_CRITICAL(&gStateMux);
@@ -63,6 +79,15 @@ sys_status_t core_abort_regen(void){
   return SYS_OK;
 }
 
+/**
+ * @brief dispatches a command to the Modbus Slave to start/stop physical regeneration.
+ * 
+ * Formulates a protocol write request (OP_WRITE) for the "cmd_regen" coil tag 
+ * and posts it to the Protocol Dispatcher queue.
+ * 
+ * @param state true to start regeneration, false to stop/abort.
+ */
+
 // MODBUS COMMAND
 static void send_modbus_command(bool state){
   const tag_config_t* cmd_tag = tag_find_by_name("cmd_regen");
@@ -82,6 +107,21 @@ static void send_modbus_command(bool state){
     LOG_ERROR(MODULE, "Failed to dispatch Modbus command");
   }
 }
+
+/**
+ * @brief Periodic FreeRTOS task evaluating the softener state machine.
+ * 
+ * Runs every 2 seconds on Core 1:
+ * 1. Pulls the latest sensor data from the Tag Runtime cache.
+ * 2. Evaluates the priority state machine:
+ *    - Priority 1: Data invalid -> IDLE state.
+ *    - Priority 2: Pressure low (< 20 psi) -> FAULT state.
+ *    - Priority 3: Salt level low (< 10%) -> FAULT state.
+ *    - Priority 4: Regeneration active (tag 6 true) -> REGEN_RUNNING state.
+ *    - Priority 5: Default normal operation -> MONITORING state.
+ * 3. Enforces cycle timeout (stops regeneration command after 2 minutes).
+ * 4. Processes pending command flags (remote regeneration requests).
+ */
 
 //  CORE TASK 
 static void core_task(void* pvParameters){

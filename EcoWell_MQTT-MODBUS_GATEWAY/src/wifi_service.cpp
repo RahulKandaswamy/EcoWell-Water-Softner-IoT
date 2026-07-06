@@ -65,6 +65,27 @@ bool wifi_is_connected(){
   return WiFi.isConnected();
 }
 
+/**
+ * @file wifi_service.cpp
+ * @brief Wi-Fi Connection Manager using an Event-Driven State Machine.
+ * 
+ * Runs as a dedicated FreeRTOS task handling station-mode connection,
+ * IP acquisition, and automatic reconnection. Feeds back connection 
+ * status updates directly to the application event loop.
+ */
+/**
+ * @brief Wi-Fi Connection Finite State Machine (FSM) Task.
+ * 
+ * Blocks on an event message queue (xWifiQueueHandle). When an event occurs,
+ * it performs state-specific transition logic:
+ * - IDLE: Connects using WiFi.begin() on WIFI_EVT_START.
+ * - CONNECTING: Transitions to CONNECTED on STA_CONNECTED. Starts retry timer on disconnect.
+ * - CONNECTED: Transitions to GOT_IP on IP acquisition. Stops retry timer.
+ * - GOT_IP: Fires APP_EVENT_NETWORK_UP. Transitions back on disconnect or lost IP.
+ * - RETRY_WAIT: Evaluates connection state on retry timeout, either reclaiming 
+ *   connection or re-triggering WiFi.begin() and returning to CONNECTING.
+ */
+
 void wifiFSTMTask(void *pv){
   wifi_msg_t rx_wifi_msg_buff;
   while(true){

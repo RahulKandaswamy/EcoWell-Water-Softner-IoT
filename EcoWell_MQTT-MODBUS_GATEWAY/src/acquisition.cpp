@@ -26,6 +26,22 @@ sys_status_t acquisition_post_response(const protocol_response_t* response){
   return SYS_OK;
 }
 
+/**
+ * @file acquisition.cpp
+ * @brief Cyclic Sensor Data Acquisition Engine.
+ * 
+ * Spawns a background task that periodically scans the tag registry, dispatches
+ * read commands through the protocol dispatcher, and waits for driver responses
+ * to update the shared Tag Runtime data store.
+ */
+/**
+ * @brief Cyclic execution loop that schedules reads for all active registry tags.
+ * 
+ * Sweeps the entire tag table, constructs protocol read requests for tags 
+ * matching the TAG_ACCESS_READ_ONLY or TAG_ACCESS_READ_WRITE masks, and dispatches
+ * them to the dispatcher's queue.
+ */
+
 static void acquisition_scan(void){
   for(uint16_t i = 0; i < tag_count(); i++){
     const tag_config_t* tag = tag_get_at(i);
