@@ -5,6 +5,8 @@
 #include "tag_runtime.h"
 #include "logger.h"
 #include "modbus_codec.h"
+#include "system_events.h"
+#include "event_service.h"
 
 #define MODULE "MODBUS"
 
@@ -12,13 +14,18 @@ static bool gInitialized = false;
 static modbus_config_t gConfig;
 static ModbusClientRTU modbus(21);
 static SemaphoreHandle_t gModbusMutex = NULL;
+static bool gModbusCommHealthy = true;
 
 void on_modbus_data(ModbusMessage response, uint32_t token){
-  // 1. Look up the STATIC config to know how to decode (NO runtime lock needed!)
   const tag_config_t* tag = tag_find_by_id(token);
   if(tag == NULL){
     LOG_ERROR(MODULE, "Received data for unknown tag ID: %lu", token);
     return;
+  }
+
+  if(!gModbusCommHealthy) {
+    gModbusCommHealthy = true;
+    event_post(APP_EVENTS, APP_EVENT_MODBUS_NETWORK_UP, NULL, 0);
   }
 
   tag_value_t temp_value;
@@ -76,6 +83,12 @@ void on_modbus_data(ModbusMessage response, uint32_t token){
 void on_modbus_error(Error error, uint32_t token) {
   LOG_ERROR(MODULE, "token %u, Modbus error: %u - %s", token, (int)error, (const char*)ModbusError(error));
   
+  if(gModbusCommHealthy) {
+    gModbusCommHealthy = false;
+    event_post(APP_EVENTS, APP_EVENT_MODBUS_NETWORK_DOWN, NULL, 0);
+    event_post(APP_EVENTS, APP_EVENT_SYSTEM_FAULT, NULL, 0);
+  }
+
   protocol_response_t p_resp;
   p_resp.tagId = token;
   p_resp.status = SYS_ERR_FAIL;

@@ -14,11 +14,11 @@ static tag_config_t gTags[] = {
     .dataType = TAG_FLOAT32,
     .sourceConfig = {
             .modbus = {
-                .slaveId = 1, 
-                .address = 1, 
-                .quantity = 2, 
-                .functionCode = 0x03, 
-                .wordOrder = WORD_CDAB 
+              .slaveId = 1, 
+              .address = 1, 
+              .quantity = 2, 
+              .functionCode = 0x03, 
+              .wordOrder = WORD_CDAB 
             }
         }
     },  
@@ -33,11 +33,11 @@ static tag_config_t gTags[] = {
     .dataType = TAG_FLOAT32,
     .sourceConfig = {
             .modbus = {
-                .slaveId = 1, 
-                .address = 3, 
-                .quantity = 2, 
-                .functionCode = 0x03, 
-                .wordOrder = WORD_CDAB 
+              .slaveId = 1, 
+              .address = 3, 
+              .quantity = 2, 
+              .functionCode = 0x03, 
+              .wordOrder = WORD_CDAB 
             }
         }
     },
@@ -51,13 +51,12 @@ static tag_config_t gTags[] = {
     .access = TAG_ACCESS_READ_ONLY,
     .dataType = TAG_FLOAT32,
     .sourceConfig = {
-            .modbus = 
-                {
-                    .slaveId = 1, 
-                    .address = 5, 
-                    .quantity = 2, 
-                    .functionCode = 0x03, 
-                    .wordOrder = WORD_CDAB 
+            .modbus = {
+                  .slaveId = 1, 
+                  .address = 5, 
+                  .quantity = 2, 
+                  .functionCode = 0x03, 
+                  .wordOrder = WORD_CDAB 
                 }
         }
     },
@@ -71,13 +70,12 @@ static tag_config_t gTags[] = {
     .access = TAG_ACCESS_READ_ONLY,
     .dataType = TAG_UINT16,
     .sourceConfig = {
-            .modbus = 
-            {
-                .slaveId = 1, 
-                .address = 7, 
-                .quantity = 1, 
-                .functionCode = 0x03, 
-                .wordOrder = WORD_ABCD 
+            .modbus = {
+              .slaveId = 1, 
+              .address = 7, 
+              .quantity = 1, 
+              .functionCode = 0x03, 
+              .wordOrder = WORD_ABCD 
             }
         }
     },
@@ -91,13 +89,12 @@ static tag_config_t gTags[] = {
     .access = TAG_ACCESS_READ_ONLY,
     .dataType = TAG_BOOL,
     .sourceConfig = {
-            .modbus = 
-            { 
-                .slaveId = 1, 
-                .address = 1,
-                .quantity = 1, 
-                .functionCode = 0x02, 
-                .wordOrder = WORD_ABCD 
+            .modbus = { 
+              .slaveId = 1, 
+              .address = 1,
+              .quantity = 1, 
+              .functionCode = 0x02, 
+              .wordOrder = WORD_ABCD 
             }
         }
     },
@@ -111,13 +108,12 @@ static tag_config_t gTags[] = {
     .access = TAG_ACCESS_READ_ONLY,
     .dataType = TAG_BOOL,
     .sourceConfig = {
-        .modbus = 
-            {
-                .slaveId = 1, 
-                .address = 1, 
-                .quantity = 1, 
-                .functionCode = 0x02, 
-                .wordOrder = WORD_ABCD 
+        .modbus = {
+              .slaveId = 1, 
+              .address = 1, 
+              .quantity = 1, 
+              .functionCode = 0x02, 
+              .wordOrder = WORD_ABCD 
             }
         }
     },
@@ -131,13 +127,12 @@ static tag_config_t gTags[] = {
     .access = TAG_ACCESS_WRITE_ONLY,
     .dataType = TAG_BOOL,
         .sourceConfig = {
-            .modbus = 
-            {
-                .slaveId = 1, 
-                .address = 1, 
-                .quantity = 1, 
-                .functionCode = 0x05, 
-                .wordOrder = WORD_ABCD 
+            .modbus = {
+              .slaveId = 1, 
+              .address = 1, 
+              .quantity = 1, 
+              .functionCode = 0x05, 
+              .wordOrder = WORD_ABCD 
             }
         }
     },

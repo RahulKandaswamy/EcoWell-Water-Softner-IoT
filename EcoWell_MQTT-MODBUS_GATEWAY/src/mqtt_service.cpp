@@ -136,7 +136,17 @@ sys_status_t mqtt_init(const mqtt_config_t* cfg){
     LOG_INFO(MODULE, "Connected to the broker");
     event_post(APP_EVENTS, APP_EVENT_MQTT_CONNECTED, NULL, 0);
     mqtt_set_state(MQTT_STATE_RUNNING);
-    gClient.publish("ECO/WS-1/STATUS", 1, true, "{\"value\":\"online\"}");
+    mqtt_msg_t statusMsg = {};
+
+    strncpy(statusMsg.topic, "ECO/WS-1/MQTT-STATUS", sizeof(statusMsg.topic)-1);
+    statusMsg.topic[sizeof(statusMsg.topic)-1] = '\0';
+    strncpy(statusMsg.payload, "{\"value\":\"online\"}", sizeof(statusMsg.payload)-1);
+    statusMsg.payload[sizeof(statusMsg.payload)-1] = '\0';
+
+    statusMsg.len = strnlen(statusMsg.payload, sizeof(statusMsg.payload)-1);
+    statusMsg.qos = 1;
+    statusMsg.retain = true;
+    mqtt_publish(&statusMsg);
   })
   .onDisconnect([](bool sp){
     LOG_INFO(MODULE, "Disconnected from broker, Auto-reconnecting...");

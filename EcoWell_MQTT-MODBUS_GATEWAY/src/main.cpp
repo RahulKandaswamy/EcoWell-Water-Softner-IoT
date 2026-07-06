@@ -13,6 +13,7 @@
 #include "event_service.h"
 #include "publisher.h"
 #include "subscriber.h"
+#include "alert_service.h"
 
 #define MODULE "APP"
 
@@ -53,22 +54,35 @@ static const publisher_config_t publisherConfig = {
 };
 
 static void fault_handler(sys_status_t status){
-  LOG_ERROR(MODULE, "error (%d)", status);
+  LOG_ERROR(MODULE, "SYSTEM FAULT ENCOUNTERED");
+
   switch(status){
     case SYS_ERR_NO_MEMORY:
-      LOG_ERROR(MODULE, "No memory");
+      LOG_ERROR(MODULE, "Out of heap memory! Task/Queue creation failed.");
+      LOG_ERROR(MODULE, "Action: Restarting ESP32 in 5 seconds to recover...");
+      delay(5000);
+      esp_restart(); // ONLY reboot on actual memory exhaustion
       break;
+
     case SYS_ERR_INVALID_STATE:
-      LOG_ERROR(MODULE, "Invalid state");
+      LOG_ERROR(MODULE, "Module accessed in an invalid state (uninitialized).");
+      LOG_ERROR(MODULE, "Action: Check your setup() sequence to ensure all modules init before starting.");
+      event_post(APP_EVENTS, APP_EVENT_SYSTEM_FAULT, NULL, 0); 
       break;
-    case SYS_ERR_FAIL:
-      LOG_ERROR(MODULE, "Error / Fail");
-      break;
+
     case SYS_ERR_INVALID_PARAM:
-      LOG_ERROR(MODULE, "Invalid Parameter");
+      LOG_ERROR(MODULE, "Invalid configuration parameters (Null pointer passed).");
+      LOG_ERROR(MODULE, "Action: Inspect config structures (wifiConfig, mqttConfig, etc.) in app.cpp.");
+      event_post(APP_EVENTS, APP_EVENT_SYSTEM_FAULT, NULL, 0);
       break;
+
+    case SYS_ERR_FAIL:
+      LOG_ERROR(MODULE, "General software execution failure.");
+      event_post(APP_EVENTS, APP_EVENT_SYSTEM_FAULT, NULL, 0);
+      break;
+      
     default:
-      LOG_ERROR(MODULE, "Unhandled error");
+      LOG_ERROR(MODULE, "Unknown system error (%d).", status);
       break;
   }      
 }
@@ -79,25 +93,36 @@ static void app_event_handler(void *arg, esp_event_base_t base, int32_t id, void
       LOG_INFO(MODULE, "Network Up, starting mqtt");
       mqtt_start();
       break;
+
     case APP_EVENT_NETWORK_DOWN:
       LOG_INFO(MODULE, "Network Down, stopping mqtt");
       if(mqtt_get_state() != MQTT_STATE_STOPPED) mqtt_stop();
       break;
+
     case APP_EVENT_MQTT_CONNECTED:
       LOG_INFO(MODULE, "Connected to mqtt broker, starting publisher and subscriber");
       publisher_start();
       subscriber_start();
       break;
+
     case APP_EVENT_MQTT_DISCONNECTED:
       LOG_WARN(MODULE, "Disconnected from mqtt broker, stopping publisher and subscriber");
       if(publisher_get_state() != PUBLISHER_STATE_STOPPED) publisher_stop();
       if(subscriber_get_state() != SUBSCRIBER_STATE_STOPPED) subscriber_stop();
       break;
+
+    case APP_EVENT_MODBUS_NETWORK_UP:
+      LOG_INFO(MODULE, "Modbus network up");
+      break;
+
+    case APP_EVENT_MODBUS_NETWORK_DOWN:
+      LOG_WARN(MODULE, "Modbus network down");
+      break;
+
     default:
-      LOG_ERROR(MODULE, "Unhandled event %d", id);
+      break;
   }
 }
-// app event hanlder end
 
 sys_status_t app_init(){
   sys_status_t status;
@@ -110,6 +135,9 @@ sys_status_t app_init(){
   if(status != SYS_OK) return status;
 
   status = event_register(APP_EVENTS, ESP_EVENT_ANY_ID, app_event_handler, NULL);
+  if(status != SYS_OK) return status;
+
+  status = alert_init(); 
   if(status != SYS_OK) return status;
 
   // // 2. Data Structures
@@ -147,6 +175,10 @@ sys_status_t app_init(){
 
 sys_status_t app_start(){
   sys_status_t status;
+
+  status = alert_start();
+  if(status != SYS_OK) return status;
+  
   status = core_start();
   if(status != SYS_OK) return status;
 

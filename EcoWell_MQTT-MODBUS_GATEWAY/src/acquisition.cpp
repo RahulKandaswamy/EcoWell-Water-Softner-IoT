@@ -3,7 +3,6 @@
 #include "tag_registry.h"
 #include "tag_runtime.h"
 
-
 #define MODULE "ACQUISITION"
 
 static TaskHandle_t gAcqTaskHandle = NULL;
