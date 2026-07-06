@@ -18,31 +18,31 @@
 #define MODULE "APP"
 
 const mqtt_config_t mqttConfig = {
-  .broker = "www.xpredictautomation.com",
-  .port = 1883,
-  .username = "XP_DEMO_MASTER",
-  .password = "xplbs@123",
-  .clientId = "XP-01",
-  .secure = false,
-  .cleanSession = false,
-  .autoReconnect = true,
-  .keepAlive = 120,
+  .broker = "www.xpredictautomation.com", // domain name or IP address of the MQTT broker
+  .port = 1883, // non-secure port for MQTT
+  .username = "XP_DEMO_MASTER", // username for MQTT authentication, mandatory
+  .password = "xplbs@123", // password for MQTT authentication, mandatory
+  .clientId = "XP-01", // unique client ID for this device, mandatory
+  .secure = false, // changes, not required
+  .cleanSession = false, // changes, not required
+  .autoReconnect = true, // changes, not required
+  .keepAlive = 120, // changes, not required
 };
 
 static const app_wifi_config_t wifiConfig = {
-  .ssid = "Connect@2.4ghz",
-  .password = "Start@2.4ghz",
-  .autoReconnect = true,
-  .reconnectTimeoutMs = 20000,
-  .mode = WIFI_STA
+  .ssid = "Connect@2.4ghz", // SSID for WiFi connection, mandatory
+  .password = "Start@2.4ghz", // password for WiFi connection, mandatory
+  .autoReconnect = true, // changes, not required
+  .reconnectTimeoutMs = 20000, // changes, not required
+  .mode = WIFI_STA // changes, not required
 };
 
 static const modbus_config_t modbusConfig = {
-  .baudrate = 19200,
-  .serialConfig = SERIAL_8N2,
-  .txPin = 17,
-  .rxPin = 18,
-  .timeoutMs = 2000
+  .baudrate = 19200,  // use your modbus slave device baud rate
+  .serialConfig = SERIAL_8N2, // use your modbus slave device serial configuration
+  .txPin = 17, // use your modbus slave device TX pin
+  .rxPin = 18, // use your modbus slave device RX pin
+  .timeoutMs = 2000 // changes, not required
 };
 
 static const acquisition_config_t acqConfig = {
@@ -127,7 +127,6 @@ static void app_event_handler(void *arg, esp_event_base_t base, int32_t id, void
 sys_status_t app_init(){
   sys_status_t status;
   
-  // // 1. Logging and Events (Foundation)
   status = logger_init();
   if(status != SYS_OK) return status;
 
@@ -140,11 +139,9 @@ sys_status_t app_init(){
   status = alert_init(); 
   if(status != SYS_OK) return status;
 
-  // // 2. Data Structures
   status = tag_runtime_init();
   if(status != SYS_OK) return status;
 
-  // // 3. Logic & Services
   status = core_init();
   if(status != SYS_OK) return status;
 
@@ -171,7 +168,7 @@ sys_status_t app_init(){
   
   return SYS_OK;
 }
-// app init end
+
 
 sys_status_t app_start(){
   sys_status_t status;

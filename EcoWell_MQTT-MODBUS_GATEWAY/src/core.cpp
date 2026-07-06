@@ -44,7 +44,7 @@ static void core_set_state(ws_state_t newState){
   portEXIT_CRITICAL(&gStateMux);
 }
 
-// ============= REMOTE COMMAND APIs ===============
+// REMOTE COMMAND APIs
 sys_status_t core_request_regen(void){
   if(!gInitialized) return SYS_ERR_INVALID_STATE;
   xSemaphoreTake(gCommandMutex, portMAX_DELAY);
@@ -63,7 +63,7 @@ sys_status_t core_abort_regen(void){
   return SYS_OK;
 }
 
-// ============= MODBUS COMMAND ====================
+// MODBUS COMMAND
 static void send_modbus_command(bool state){
   const tag_config_t* cmd_tag = tag_find_by_name("cmd_regen");
   if(cmd_tag == NULL){
@@ -83,24 +83,24 @@ static void send_modbus_command(bool state){
   }
 }
 
-// ============= CORE TASK =========================
+//  CORE TASK 
 static void core_task(void* pvParameters){
   LOG_INFO(MODULE, "Task started");
 
   while(true){
     vTaskDelay(pdMS_TO_TICKS(CORE_EVAL_PERIOD_MS));
 
-    // -------- 1. READ SENSOR DATA --------
-    tag_runtime_t* pressure_tag    = tag_runtime_get(2);
-    tag_runtime_t* salt_tag        = tag_runtime_get(3);
-    tag_runtime_t* regen_stat_tag  = tag_runtime_get(6);
+    // READ SENSOR DATA
+    tag_runtime_t* pressure_tag = tag_runtime_get(2);
+    tag_runtime_t* salt_tag = tag_runtime_get(3);
+    tag_runtime_t* regen_stat_tag = tag_runtime_get(6);
 
     if(pressure_tag == NULL || salt_tag == NULL || regen_stat_tag == NULL) continue;
 
-    float current_pressure      = 0.0f;
-    float current_salt           = 0.0f;
-    bool  is_regenerating        = false;
-    bool  process_data_valid     = false;
+    float current_pressure = 0.0f;
+    float current_salt = 0.0f;
+    bool  is_regenerating = false;
+    bool  process_data_valid = false;
 
     if(tag_runtime_lock() == SYS_OK){
       if(pressure_tag->valid && salt_tag->valid && regen_stat_tag->valid){
@@ -114,9 +114,9 @@ static void core_task(void* pvParameters){
 
     ws_state_t previousState = core_get_state();
     ws_state_t newState      = previousState;
-    bool       system_fault  = false;
+    bool system_fault  = false;
 
-    // -------- 2. EVALUATE STATE --------
+    // EVALUATE STATE
 
     // PRIORITY 1: No sensor data → IDLE
     if(!process_data_valid){
@@ -147,7 +147,7 @@ static void core_task(void* pvParameters){
     }
     // PRIORITY 4: Machine is actively regenerating
     else if(is_regenerating){
-      // Entry: record start time
+      // record start time
       if(previousState != WS_STATE_REGEN_RUNNING){
         LOG_INFO(MODULE, "Regeneration cycle started");
         gRegenStartTime = millis();
@@ -170,7 +170,7 @@ static void core_task(void* pvParameters){
       newState = WS_STATE_MONITORING;
     }
 
-    // -------- 3. GLOBAL EXIT TRANSITION --------
+    // GLOBAL EXIT TRANSITION
     // Fires exactly ONCE when leaving REGEN_RUNNING for ANY reason.
     if(previousState == WS_STATE_REGEN_RUNNING && newState != WS_STATE_REGEN_RUNNING){
       if(system_fault){
@@ -202,7 +202,7 @@ static void core_task(void* pvParameters){
 
     core_set_state(newState);
 
-    // -------- 4. PROCESS PENDING COMMANDS --------
+    // 4. PROCESS REMOTE PENDING COMMANDS
     bool execRegen = false;
     bool execAbort = false;
 
@@ -237,7 +237,6 @@ static void core_task(void* pvParameters){
   }
 }
 
-// ============= LIFECYCLE =========================
 sys_status_t core_init(void){
   if(gInitialized) return SYS_ERR_INVALID_STATE;
   LOG_INFO(MODULE, "Initializing...");
