@@ -120,29 +120,29 @@ cd your-repo-name
 2. Click **File -> Open Folder...**
 3. Select either `EcoWell_MQTT-MODBUS_GATEWAY` or `EcoWell_MODBUS_RTU_SLAVE`. PlatformIO will automatically read the `platformio.ini` file and install the necessary compiler frameworks and library dependencies (eModbus, PsychicMqttClient, ArduinoJson).
 
----
-
 ## 🔌 Hardware Setup & Pinout Mappings
 
-Connect the two ESP32-S3 boards using RS-485 transceiver modules (e.g., MAX485 or similar):
+Connect the two ESP32-S3 boards using RS-485 transceiver modules (MAX485):
 
-| ESP32-S3 Gateway Pin | Connection | ESP32-S3 Slave Pin | Notes |
+| ESP32-S3 Pin | Wire Color | MAX485 Pin | Description |
 | :--- | :--- | :--- | :--- |
-| **GPIO 17 (TX)** | $\rightarrow$ | **GPIO 18 (RX)** | UART Cross connection (TX $\rightarrow$ RX) |
-| **GPIO 18 (RX)** | $\rightarrow$ | **GPIO 17 (TX)** | UART Cross connection (RX $\rightarrow$ TX) |
-| **GND** | $\rightarrow$ | **GND** | Common ground reference |
-| **GPIO 1 (Relay)** | $\rightarrow$ | **Relay Signal Input** | Actuated output on Slave |
+| **GPIO 17 (TX)** | Green | **DI** (Driver Input) | UART transmit data to RS-485 bus |
+| **GPIO 18 (RX)** | Blue | **RO** (Receiver Output) | UART receive data from RS-485 bus |
+| **GPIO 4 (DE/RE)** | Purple | **DE + RE** (tied together) | Direction control (HIGH = Transmit, LOW = Receive) |
+| **3.3V** | Red | **VCC** | Power supply |
+| **GND** | Black | **GND** | Common ground |
+| **GPIO 1 (Slave only)** | Orange | **Relay Module** | Physical relay actuation output |
 
 ### MAX485 Node-to-Node Circuit Diagram
 
-Below is the physical wiring diagram showing how to link the Gateway and Slave microcontrollers using two MAX485 transceiver boards:
+Below is the physical wiring diagram showing how to link the Gateway and Slave microcontrollers using two MAX485 transceiver boards with DE/RE direction control:
 
 ![ESP32-S3 RS-485 Modbus RTU Wiring Diagram](diagrams/esp32_max485_circuit.jpg)
 
 #### Wiring Notes:
-* **DE & RE Pins**: On both MAX485 transceivers, the **DE (Driver Enable)** and **RE (Receiver Enable)** pins should be tied together. In our setup, these can be connected directly to VCC or GND depending on whether you are configuring permanent transmission/reception or automatic direction control.
-* **Bus Termination**: Make sure to place a **120-Ohm terminating resistor** across the Differential lines `A` and `B` at both ends of the bus to prevent signal reflection.
-* **Common Ground**: Connecting the grounds of both ESP32-S3 boards is crucial to maintain a stable common-mode voltage reference across the long-distance differential bus.
+* **DE & RE Pins**: On both MAX485 transceivers, the **DE (Driver Enable)** and **RE (Receiver Enable)** pins are tied together and connected to **GPIO 4**. The firmware toggles this pin HIGH during transmission and LOW during reception to control the half-duplex bus direction.
+* **Bus Termination**: Place a **120-Ohm terminating resistor** across the differential lines `A` and `B` at both ends of the bus to prevent signal reflection.
+* **Common Ground**: Connecting the grounds of both ESP32-S3 boards is critical for maintaining a stable common-mode voltage reference.
 
 ---
 
