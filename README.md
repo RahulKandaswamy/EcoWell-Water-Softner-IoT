@@ -8,10 +8,10 @@ An end-to-end industrial IoT solution designed for the EcoWell Water Softener sy
 
 The SCADA dashboard is hosted on a public Linux AWS instance and is actively connected to our secure cloud MQTT broker. 
 
-* **HMI / SCADA Dashboard URL**: `http://<YOUR_PUBLIC_IP>:12000`
-  * *Username*: `admin`
-  * *Password*: `admin`
-* **MQTT Broker URL**: `mqtt://<YOUR_PUBLIC_IP>:1883`
+* **HMI / SCADA Dashboard URL**: `http://13.233.38.147:12000`
+  * *Username*: `ecowell`
+  * *Password*: `pass@123`
+* **MQTT Broker URL**: `mqtt://13.233.38.147:1883`
 
 ---
 
@@ -59,7 +59,7 @@ The SCADA dashboard is hosted on a public Linux AWS instance and is actively con
                                                        (All post responses back to Acq)
 ```
 
-### 1. Northbound Path (Cloud Interface)
+### 1. Cloud Interface
 * **Wi-Fi Service**: Event-driven station connection manager with automatic reconnection on drops.
 * **MQTT Service**: Low-overhead thread-safe publisher/subscriber interface equipped with a Last Will & Testament (`offline` status) and credentials.
 * **Publisher / Subscriber Tasks**:
@@ -67,7 +67,7 @@ The SCADA dashboard is hosted on a public Linux AWS instance and is actively con
   * **Subscriber**: Listens to write coil commands (regeneration trigger) and dispatches them securely to the state machine or local bus.
 * **Event & Alert Service**: Decorates system state transitions (faults, warnings, regenerations) into human-readable alerts published to the cloud.
 
-### 2. Southbound Path (Local Control Loop)
+### 2. Local Control Loop
 * **Acquisition Engine**: Periodically polls tags at 10-second intervals.
 * **Protocol Dispatcher**: An abstraction router separating acquisition logic from driver layers (Modbus/System/CAN).
 * **Modbus Service**: Master driver managing asynchronous UART communication over Serial1 at 19200 baud.
@@ -82,7 +82,7 @@ The SCADA dashboard is hosted on a public Linux AWS instance and is actively con
 EcoWell_Assignment/
 ├── EcoWell_MQTT-MODBUS_GATEWAY/     # Gateway Project Folder
 │   ├── platformio.ini               # PlatformIO Environment Config
-│   ├── ARCHITECTURE_final_v2.docx   # Comprehensive Gateway Design Document
+│   ├── Documentation.docx   # Comprehensive Gateway Design Document
 │   ├── include/                     # Public Header Interfaces (.h)
 │   └── src/                         # Core Implementation Files (.cpp)
 │       ├── main.cpp                 # Boot orchestrator & Event mediator
@@ -93,7 +93,7 @@ EcoWell_Assignment/
 │
 └── EcoWell_MODBUS_RTU_SLAVE/        # Modbus RTU Slave Simulator Folder
     ├── platformio.ini               # PlatformIO Environment Config
-    ├── ARCHITECTURE_final.docx      # Detailed Slave Design Document
+    ├── Documentation.docx      # Detailed Slave Design Document
     └── src/
         └── main.cpp                 # Register mapping & USB Serial CLI
 ```
